@@ -1,1 +1,87 @@
+import os
+import asyncio
+import logging
 
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message, CallbackQuery
+from aiogram.filters import CommandStart
+from aiogram.enums import ParseMode
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+logging.basicConfig(level=logging.INFO)
+
+WELCOME_TEXT = (
+    "JUZ40 білім беру орталығының GENIUS бөлімінің CALL-CENTRE қош келдіңіз!❤️\n\n"
+    "Өзіңіздің комбинацияңызды таңдау арқылы сұрағыңызды жолдай аласыз👇🏻"
+)
+
+PRICES_TEXT = (
+    "🏆 НЕГІЗГІ БАҒА\n"
+    "VIP — ТЕГІН\n"
+    "PREMIUM — 35 000 тг\n"
+    "STANDARD — 45 000 тг\n\n"
+    "🎯 IELTS\n"
+    "VIP — ТЕГІН\n"
+    "PREMIUM — 27 000 тг\n"
+    "STANDARD — 34 000 тг"
+)
+
+RESPONSIBLES = {
+    "djta_geolangl": "ДЖТАНГЛ/ГЕОАНГЛ комбинациялары бойынша сұрақтарыңызды осы жауапты маманнан сұрай аласыз: @dgadamir",
+    "adebtil_ruslit": "ӘДЕБТІЛ/РУСЛИТ комбинациялары бойынша сұрақтарыңызды осы жауапты маманнан сұрай аласыз: @atrlzere",
+    "geodjt_djtquqyq": "ГЕОДЖТ/ДЖТҚҰҚЫҚ комбинациялары бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @wqa1ad",
+    "biohim": "БИОХИМ комбинациясы бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @uldanasssss",
+    "fizmat": "ФИЗМАТ комбинациясы бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @physmatharu",
+    "infomat": "ИНФОМАТ комбинациясы бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @zhantoreinfomath",
+    "geomath": "ГЕОМАТ комбинациясы бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @geomathzhuka",
+    "geobio": "БИОГЕО комбинациясы бойынша сұрақтарды осы жауапты маманнан сұрай аласыз: @soleanar",
+    "prices": PRICES_TEXT,
+}
+
+def main_keyboard():
+    kb = InlineKeyboardBuilder()
+    kb.button(text="ДЖТАНГЛ/ГЕОАНГЛ", callback_data="djta_geolangl")
+    kb.button(text="ӘДЕБТІЛ/РУСЛИТ", callback_data="adebtil_ruslit")
+    kb.button(text="ГЕОДЖТ/ДЖТҚҰҚЫҚ", callback_data="geodjt_djtquqyq")
+    kb.button(text="БИОХИМ", callback_data="biohim")
+    kb.button(text="ФИЗМАТ", callback_data="fizmat")
+    kb.button(text="ИНФОМАТ", callback_data="infomat")
+    kb.button(text="ГЕОМАТ", callback_data="geomath")
+    kb.button(text="ГЕОБИО", callback_data="geobio")
+    kb.button(text="БАҒАЛАР", callback_data="prices")
+    kb.adjust(2, 2, 2, 2, 1)
+    return kb.as_markup()
+
+def back_keyboard():
+    kb = InlineKeyboardBuilder()
+    kb.button(text="⬅️ Артқа", callback_data="back_to_menu")
+    return kb.as_markup()
+
+async def main():
+    token = os.getenv("BOT_TOKEN")
+    if not token:
+        raise RuntimeError("BOT_TOKEN табылмады. Environment-қа BOT_TOKEN қойыңыз.")
+
+    # Кей ортада DefaultBotProperties керек болуы мүмкін.
+    bot = Bot(token=token, default={"parse_mode": ParseMode.HTML})
+    dp = Dispatcher()
+
+    @dp.message(CommandStart())
+    async def start(m: Message):
+        await m.answer(WELCOME_TEXT, reply_markup=main_keyboard())
+
+    @dp.callback_query(F.data == "back_to_menu")
+    async def back_to_menu(c: CallbackQuery):
+        await c.answer()
+        await c.message.edit_text(WELCOME_TEXT, reply_markup=main_keyboard())
+
+    @dp.callback_query(F.data.in_(RESPONSIBLES.keys()))
+    async def handle_choice(c: CallbackQuery):
+        await c.answer()
+        text = RESPONSIBLES.get(c.data, "Қате: белгісіз команда.")
+        await c.message.edit_text(text, reply_markup=back_keyboard())
+
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
