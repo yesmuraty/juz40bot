@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.client.default import DefaultBotProperties
 
 logging.basicConfig(level=logging.INFO)
 
@@ -63,8 +64,8 @@ async def main():
         raise RuntimeError("BOT_TOKEN табылмады. Environment-қа BOT_TOKEN қойыңыз.")
 
     # Кей ортада DefaultBotProperties керек болуы мүмкін.
-    bot = Bot(token=token, default={"parse_mode": ParseMode.HTML})
-    dp = Dispatcher()
+bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp = Dispatcher()
 
     @dp.message(CommandStart())
     async def start(m: Message):
